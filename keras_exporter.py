@@ -8,13 +8,6 @@ import os
 # very important to do this as a first thing
 K.set_learning_phase(0)  # all new operations will be in test mode from now on
 
-#model_path = os.path.join(os.path.sep, 'home', 'chuenkai.shie', 'models', 'Xcept_fc_food11_3.hdf5')
-#network_path = os.path.join(os.path.sep, 'home', 'chuenkai.shie', 'models', 'Xcept_fc.json')
-#nb_classes = 11
-
-#model_path = os.path.join(os.path.sep, 'home', 'chuenkai.shie', 'code','diet', 'Inceptv3_Mix_5.hdf5')
-#network_path = os.path.join(os.path.sep, 'home', 'chuenkai.shie', 'code','diet', 'Inceptv3_Mix.json')
-
 model_path = os.path.join(os.path.sep, 'home', 'chuenkai.shie', 'code', 'diet','Inceptv3_Mix_6.hdf5')
 network_path = os.path.join(os.path.sep, 'home', 'chuenkai.shie', 'code', 'diet','Inceptv3_Mix_6.json')
 nb_classes = 2
@@ -37,23 +30,13 @@ def json_gen():
 
 
 # serialize the model and get its weights, for quick re-building
-previous_model = model_from_json(open(network_path).read())
-previous_model.summary()
-previous_model.load_weights(model_path)
+model = model_from_json(open(network_path).read())
+model.summary()
+model.load_weights(model_path)
 
-if (previous_model.uses_learning_phase):
+if (model.uses_learning_phase):
     raise ValueError('Model using learning phase.')
 
-#config = previous_model.get_config()
-#weights = previous_model.get_weights()
-# previous_model.summary()
-
-# re-build a model where the learning phase is now hard-coded to 0
-from keras.models import model_from_config
-# TODO bug:Improper config format  -> reconstruct model config again by code
-#new_model = model_from_config(config)
-#new_model = json_gen()
-#new_model.set_weights(weights)
 
 print('start exporting')
 from tensorflow.python.saved_model import builder as saved_model_builder
@@ -67,12 +50,12 @@ from tensorflow.python.saved_model.signature_def_utils_impl import build_signatu
 
 
 # export_path can't already exit
-export_path = '2' #'tf_serving_models/1'
+export_path = os.path.join(os.path.sep, 'home', 'chuenkai.shie', 'TFS_models', '1')
 builder = saved_model_builder.SavedModelBuilder(export_path)
 
 # original
-prediction_signature = predict_signature_def(inputs={'images': previous_model.input},
-                                  outputs={'scores': previous_model.output},)
+prediction_signature = predict_signature_def(inputs={'images': model.input},
+                                  outputs={'scores': model.output},)
 
 with K.get_session() as sess:
     builder.add_meta_graph_and_variables(sess=sess,
